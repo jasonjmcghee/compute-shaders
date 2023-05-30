@@ -1,0 +1,13 @@
+<Project Sdk="Godot.NET.Sdk/4.0.3">
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <EnableDynamicLoading>true</EnableDynamicLoading>
+    <RootNamespace>ComputeShader</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <Content Include="DisplayShader.gdshader" />
+    <Content Include="planning.md" />
+    <Content Include="slime.glsl" />
+    <Content Include="slime_diffuse.glsl" />
+  </ItemGroup>
+</Project>
