@@ -7,6 +7,10 @@ struct Params {
     float delta;
     float evaporateSpeed;
     float diffuseSpeed;
+    float mouseX;
+    float mouseY;
+    bool mouseLeft;
+    bool mouseRight;
 };
 
 // Invocations in the (x, y, z) dimension
@@ -57,6 +61,10 @@ void main() {
     float delta = params_buffer.params.delta;
     float evaporateSpeed = params_buffer.params.evaporateSpeed;
     float diffuseSpeed = params_buffer.params.diffuseSpeed;
+    int mouseX = int(params_buffer.params.mouseX);
+    int mouseY = int(params_buffer.params.mouseY);
+    bool mouseLeft = params_buffer.params.mouseLeft;
+    bool mouseRight = params_buffer.params.mouseRight;
 
     if (id >= width * height) {
         return;
@@ -78,12 +86,44 @@ void main() {
     }
 
     vec4 blurredCol = sum / 9.0;
+
     float diffuseWeight = clamp(diffuseSpeed * delta, 0.0, 1.0);
 
     vec4 original = parseCombinedColor(trailMap_in_buffer.data[id]);
     blurredCol = mix(original, blurredCol, diffuseWeight) - evaporateSpeed * delta;
 
+    float distance = length(vec2(x - mouseX, y - mouseY));
+    float radius = 96;
+    float border = 8;
+
+    if (mouseLeft || mouseRight) {
+        if (distance < radius) {
+            if (mouseLeft) {
+                blurredCol.g = 0;
+            }
+
+            if (mouseRight) {
+                blurredCol.r = 0;
+            }
+        } else if (distance > radius + border && distance <= radius + 2 * border) {
+            if (mouseLeft) {
+                blurredCol.r = 0;
+                blurredCol.g = 1;
+                blurredCol.b = 0.5;
+                blurredCol.a = 0.5;
+            }
+
+            if (mouseRight) {
+                blurredCol.r = 1;
+                blurredCol.g = 0;
+                blurredCol.b = 0.5;
+                blurredCol.a = 0.5;
+            }
+        }
+    }
+
+
     vec4 newVal = vec4(max(0, blurredCol.r), max(0, blurredCol.g), max(0, blurredCol.b), 1.0);
-    
+
     trailMap_out_buffer.data[id] = combineColorComponents(newVal);
 }

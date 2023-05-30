@@ -164,13 +164,20 @@ public partial class Slime : Node2D {
 
         var paramsStruct = ConvertStructToBytes(
             settings with {
-                delta = (float) delta, time = (float) time, mouseLeft = Input.IsMouseButtonPressed(MouseButton.Left),
-                mouseRight = Input.IsMouseButtonPressed(MouseButton.Right), mouseX = mousePos.X, mouseY = mousePos.Y
+                delta = (float) delta, time = (float) time,
+                mouseLeft = Input.IsMouseButtonPressed(MouseButton.Left) && Input.IsKeyPressed(Key.Space),
+                mouseRight = Input.IsMouseButtonPressed(MouseButton.Right) && Input.IsKeyPressed(Key.Space),
+                mouseX = mousePos.X, mouseY = mousePos.Y
             }
         );
         rd.BufferUpdate(paramsBuffer, 0, (uint) paramsStruct.Length, paramsStruct);
         var diffuseParamsStruct = ConvertStructToBytes(
-            diffuseParams with {delta = (float) delta}
+            diffuseParams with {
+                delta = (float) delta,
+                mouseLeft = Input.IsMouseButtonPressed(MouseButton.Left) && !Input.IsKeyPressed(Key.Space),
+                mouseRight = Input.IsMouseButtonPressed(MouseButton.Right) && !Input.IsKeyPressed(Key.Space),
+                mouseX = mousePos.X, mouseY = mousePos.Y
+            }
         );
         rd.BufferUpdate(diffuseParamsBuffer, 0, (uint) diffuseParamsStruct.Length, diffuseParamsStruct);
 
@@ -338,5 +345,9 @@ public partial class Slime : Node2D {
         public float delta;
         public float evaporateSpeed;
         public float diffuseSpeed;
+        public float mouseX;
+        public float mouseY;
+        public bool mouseLeft;
+        public bool mouseRight;
     };
 }
