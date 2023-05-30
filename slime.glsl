@@ -6,6 +6,7 @@ struct Agent {
     float y;
     float angle;
     uint type;
+    float lifetime;
 };
 
 struct Params {
@@ -20,6 +21,11 @@ struct Params {
     float sensorAngleDegrees;
     float turnSpeed;
     float trailWeight;
+    float maxLifetime;
+    float mouseX;
+    float mouseY;
+    bool mouseLeft;
+    bool mouseRight;
 };
 
 // Invocations in the (x, y, z) dimension
@@ -97,18 +103,18 @@ float sense(Agent agent, float sensorAngleOffset) {
 
     float sum = 0.0;
 
-//    ivec4 senseWeight = agent.speciesMask * 2 - 1;
+    //    ivec4 senseWeight = agent.speciesMask * 2 - 1;
 
     for (int offsetY = -sensorSize; offsetY <= sensorSize; offsetY++) {
         int sampleY = min(height - 1, max(0, sensorCenterY + offsetY));
         uint row = sampleY * width;
-    
+
         for (int offsetX = -sensorSize; offsetX <= sensorSize; offsetX++) {
             int sampleX = min(width - 1, max(0, sensorCenterX + offsetX));
             uint cell = row + sampleX;
 
             vec4 color = parseCombinedColor(trailMap_in_buffer.data[cell]);
-            sum += dot(agent.type == 1 ? vec4(1, -1, -1, 0) : vec4(-1, 1, -1, 0), color);
+            sum += dot(agent.type == 1 ? vec4(1, -0.5, -1, 0) : vec4(-4, 0.75, -1, 0), color);
         }
     }
 
@@ -123,7 +129,12 @@ void main() {
     float delta = params_buffer.params.delta;
     float moveSpeed = params_buffer.params.moveSpeed;
     float trailWeight = params_buffer.params.trailWeight;
-    
+    float maxLifetime = params_buffer.params.maxLifetime;
+    float mouseX = params_buffer.params.mouseX;
+    float mouseY = params_buffer.params.mouseY;
+    bool mouseLeft = params_buffer.params.mouseLeft;
+    bool mouseRight = params_buffer.params.mouseRight;
+
     uint id = gl_GlobalInvocationID.x;
 
     if (id >= numAgents) {
@@ -131,6 +142,11 @@ void main() {
     }
 
     Agent agent = agents_buffer.agents[id];
+
+    // if (agent.lifetime <= 0) {
+    //    return;
+    // }
+
     vec2 pos = vec2(agent.x, agent.y);
 
     uint random = hash(uint(pos.y * width + pos.x * height) + hash(id + uint(time * 100000.0)));
@@ -139,15 +155,15 @@ void main() {
     float sensorOffsetDst = params_buffer.params.sensorOffsetDst;
     float sensorAngleDegrees = params_buffer.params.sensorAngleDegrees;
     float turnSpeed = params_buffer.params.turnSpeed * 2.0 * 3.1415;
-    
+
     if (agent.type == 1) {
-        sensorAngleDegrees *= 2;
+        sensorAngleDegrees *= 0.5;
         sensorOffsetDst *= 2.0;
         turnSpeed *= 2;
         moveSpeed *= 2;
-        trailWeight *= 0.5;
+        trailWeight *= 0.7;
     }
-    
+
     float sensorAngleRad = sensorAngleDegrees * (3.1415 * 0.00555555555);
     float weightForward = sense(agent, 0.0);
     float weightLeft = sense(agent, sensorAngleRad);
@@ -172,17 +188,29 @@ void main() {
         agent.angle += randomSteerStrength * turnSpeed * delta;
     }
 
+    if (weightForward + weightLeft + weightRight > 0) {
+        agents_buffer.agents[id].lifetime = maxLifetime;
+    } else {
+        agents_buffer.agents[id].lifetime -= 1;
+    }
+
+    if ((mouseLeft || mouseRight) && randomSteerStrength > 0.99) {
+        //        vec2 dir = normalize(vec2(mouseX, mouseY) - pos);
+        //        agent.angle = atan(dir.y, dir.x);
+        pos = vec2(mouseX, mouseY);
+        agents_buffer.agents[id].type = mouseLeft ? 1 : 0;
+    }
+
     // Update position
     vec2 direction = vec2(cos(agent.angle), sin(agent.angle));
     vec2 newPos = pos + direction * delta * moveSpeed;
 
     // Clamp position to map boundaries, and pick new random move dir if hit boundary
     if (newPos.x < 0.0 || newPos.x >= float(width - 1) || newPos.y < 0.0 || newPos.y >= float(height - 1)) {
-        newPos.x = float(min(width-1,max(0, int(newPos.x))));
-        newPos.y = float(min(height-1,max(0, int(newPos.y))));
+        newPos.x = float(min(width-1, max(0, int(newPos.x))));
+        newPos.y = float(min(height-1, max(0, int(newPos.y))));
 
         float randomAngle = scaleToRange01(hash(random)) * 2.0 * 3.1415;
-        direction = vec2(cos(randomAngle), sin(randomAngle));
         agent.angle = randomAngle;
     }
 
@@ -191,10 +219,9 @@ void main() {
     agents_buffer.agents[id].y = newPos.y;
 
     uint cell = uint(newPos.y) * width + uint(newPos.x);
-    
+
     vec4 current = parseCombinedColor(trailMap_out_buffer.data[cell]);
-    
-//    trailMap_out_buffer.data[cell] = vec4(1.0, direction.x * 0.5f + 0.5f, direction.y * 0.5f + 0.5f);
+
     vec4 mask = vec4(agents_buffer.agents[id].type * 0.9, 1.0 - agents_buffer.agents[id].type * 0.9, 0.0, 1.0);
     vec4 newVal = mix(current, mask, trailWeight * delta);
     vec4 safe = vec4(min(1, newVal.r), min(1, newVal.g), 0.5, 1.0);
