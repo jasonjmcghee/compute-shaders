@@ -6,8 +6,6 @@
   </PropertyGroup>
   <ItemGroup>
     <Content Include="DisplayShader.gdshader" />
-    <Content Include="img.png" />
-    <Content Include="planning.md" />
     <Content Include="README.md" />
     <Content Include="slime.glsl" />
     <Content Include="slime_diffuse.glsl" />

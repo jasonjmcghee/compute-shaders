@@ -1,4 +1,4 @@
-﻿using Godot;
+using Godot;
 using System;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -8,72 +8,72 @@ public partial class Slime : Node2D {
 	[Export] public Sprite2D displaySprite;
 
 	private Array<Rid> to_free = new();
-    private RenderingDevice rd;
-    
-    public enum SpawnMode { Random, Point, InwardCircle, RandomCircle, Other }
+	private RenderingDevice rd;
 	
-    private Rid agentComputePipeline;
-    private Rid agentUniformSet;
+	public enum SpawnMode { Random, Point, InwardCircle, RandomCircle, Other }
+	
+	private Rid agentComputePipeline;
+	private Rid agentUniformSet;
 
-    private Agent[] agents;
-    private byte[] agentData;
-    private Rid agentsBuffer;
+	private Agent[] agents;
+	private byte[] agentData;
+	private Rid agentsBuffer;
 
-    private byte[] trailMapReadData;
-    private byte[] trailMapWriteData;
-    private ImageTexture trailMapDisplayTexture;
+	private byte[] trailMapReadData;
+	private byte[] trailMapWriteData;
+	private ImageTexture trailMapDisplayTexture;
 
-    private SpawnMode spawnMode = SpawnMode.Other;
-    private Random random = new Random();
+	private SpawnMode spawnMode = SpawnMode.Other;
+	private Random random = new Random();
 
-    private ImageTexture displayTexture;
-    private ShaderMaterial displayShaderMaterial;
+	private ImageTexture displayTexture;
+	private ShaderMaterial displayShaderMaterial;
 
-    private Params settings = new() {
-	    numAgents = 300000,
-	    width = 1280,
-	    height = 720,
-	    delta = 0f,
-	    time = 0f,
-	    moveSpeed = 20f,
-	    sensorSize = 1,
-	    sensorOffsetDst = 25.0f,
-	    sensorAngleDegrees = 30.0f,
-	    turnSpeed = 1f,
-	    trailWeight = 40f,
-    };
-    
-    private DiffuseParams diffuseParams = new() {
-	    width = 1280,
-	    height = 720,
-	    delta = 0f,
-	    evaporateSpeed = 0.2f,
-	    diffuseSpeed = 8f,
-    };
-    
-    private Rid paramsBuffer;
-    private double time;
-    private Rid trailMapTexture;
-    private Rid trailMapReadBuffer;
-    private Rid trailMapWriteBuffer;
-    private Rid diffuseUniformSet;
-    private Rid diffuseComputePipeline;
-    private Rid diffuseParamsBuffer;
-    private Rid diffuseTrailMapReadBuffer;
-    private Rid diffuseTrailMapWriteBuffer;
+	private Params settings = new() {
+		numAgents = 300000,
+		width = 1280,
+		height = 720,
+		delta = 0f,
+		time = 0f,
+		moveSpeed = 20f,
+		sensorSize = 1,
+		sensorOffsetDst = 25.0f,
+		sensorAngleDegrees = 30.0f,
+		turnSpeed = 1f,
+		trailWeight = 40f,
+	};
+	
+	private DiffuseParams diffuseParams = new() {
+		width = 1280,
+		height = 720,
+		delta = 0f,
+		evaporateSpeed = 0.2f,
+		diffuseSpeed = 8f,
+	};
+	
+	private Rid paramsBuffer;
+	private double time;
+	private Rid trailMapTexture;
+	private Rid trailMapReadBuffer;
+	private Rid trailMapWriteBuffer;
+	private Rid diffuseUniformSet;
+	private Rid diffuseComputePipeline;
+	private Rid diffuseParamsBuffer;
+	private Rid diffuseTrailMapReadBuffer;
+	private Rid diffuseTrailMapWriteBuffer;
 
-    public float RandomAngle() {
-	    // Generate random components on the unit circle
-	    double x = random.NextDouble() * 2 - 1;
-	    double y = random.NextDouble() * 2 - 1;
-        
-	    // Calculate the angle in radians
-	    double angle = Math.Atan2(y, x);
+	public float RandomAngle() {
+		// Generate random components on the unit circle
+		double x = random.NextDouble() * 2 - 1;
+		double y = random.NextDouble() * 2 - 1;
+		
+		// Calculate the angle in radians
+		double angle = Math.Atan2(y, x);
 
-	    return (float)angle;
-    }
+		return (float)angle;
+	}
 
-    // Called when the node enters the scene tree for the first time.
+	// Called when the node enters the scene tree for the first time.
 	public override void _Ready()
 	{
 		rd = RenderingServer.CreateLocalRenderingDevice();
@@ -125,7 +125,7 @@ public partial class Slime : Node2D {
 		to_free.Add(diffuseComputePipeline);
 
 		displayShaderMaterial = new ShaderMaterial { Shader = GD.Load<Shader>("res://DisplayShader.gdshader") };
-        
+		
 		// Create the Sprite node
 		displaySprite = new Sprite2D
 		{

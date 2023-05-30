@@ -88,9 +88,6 @@ float sense(Agent agent, float sensorAngleOffset) {
     int sensorSize = params_buffer.params.sensorSize;
     float sensorOffsetDst = params_buffer.params.sensorOffsetDst;
 
-    int x = int(id % width);
-    int y = int(id / width);
-
     float sensorAngle = agent.angle + sensorAngleOffset;
     vec2 sensorDir = vec2(cos(sensorAngle), sin(sensorAngle));
 
@@ -199,8 +196,8 @@ void main() {
     
 //    trailMap_out_buffer.data[cell] = vec4(1.0, direction.x * 0.5f + 0.5f, direction.y * 0.5f + 0.5f);
     vec4 mask = vec4(agents_buffer.agents[id].type * 0.9, 1.0 - agents_buffer.agents[id].type * 0.9, 0.0, 1.0);
-    vec4 new = mix(current, mask, trailWeight * delta);
-    vec4 safe = vec4(min(1, new.r), min(1, new.g), 0.5, 1.0);
+    vec4 newVal = mix(current, mask, trailWeight * delta);
+    vec4 safe = vec4(min(1, newVal.r), min(1, newVal.g), 0.5, 1.0);
     trailMap_out_buffer.data[cell] = combineColorComponents(safe);
 }
 
