@@ -1,0 +1,14 @@
+[remap]
+
+importer="glsl"
+type="RDShaderFile"
+uid="uid://y1jveao8tg5x"
+path="res://.godot/imported/slime_diffuse.glsl-5836767200b47e679457525c002c579f.res"
+
+[deps]
+
+source_file="res://Slime/slime_diffuse.glsl"
+dest_files=["res://.godot/imported/slime_diffuse.glsl-5836767200b47e679457525c002c579f.res"]
+
+[params]
+

@@ -1,5 +1,7 @@
+using ComputeShader.Compute;
 using Godot;
-using ComputeShader;
+
+namespace ComputeShader.Slime; 
 
 public partial class Slime : Node2D {
     [Export] public float baseSpeed = 2.0f;
@@ -46,7 +48,7 @@ public partial class Slime : Node2D {
         
         // Main Pipeline
         computeManager
-            .AddPipeline("res://slime.glsl", agentManager.settings.numAgents, 1, 1)
+            .AddPipeline("res://Slime/slime.glsl", agentManager.settings.numAgents, 1, 1)
             .StoreAndAddStep((int) Buffers.Agents, agentManager.InitializeAgents())
             .StoreAndAddStep((int) Buffers.AgentParams, agentManager.settings)
             // Double buffer, so we can scan and update without mutation to the current state
@@ -56,7 +58,7 @@ public partial class Slime : Node2D {
 
         // Diffuse Pipeline
         computeManager
-            .AddPipeline("res://slime_diffuse.glsl", (uint) (width * height), 1, 1)
+            .AddPipeline("res://Slime/slime_diffuse.glsl", (uint) (width * height), 1, 1)
             .StoreAndAddStep((int) Buffers.DiffuseParams, diffusionManager.settings)
             // Double buffer, so we can scan and update without mutation to the current state
             // Note that it reuses buffers from the previous, but swaps them.
@@ -66,7 +68,7 @@ public partial class Slime : Node2D {
             .Build();
 
         // This is what we use to display the world
-        var displayShaderMaterial = new ShaderMaterial {Shader = GD.Load<Shader>("res://DisplayShader.gdshader")};
+        var displayShaderMaterial = new ShaderMaterial {Shader = GD.Load<Shader>("res://Slime/DisplayShader.gdshader")};
         
         // Here we provide access to a sample2D that represents our world texture
         displayShaderMaterial.SetShaderParameter("trailMap", trailMapDisplayTexture);

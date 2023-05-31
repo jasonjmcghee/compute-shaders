@@ -1,0 +1,20 @@
+[gd_scene load_steps=3 format=3 uid="uid://cujnk5mtuq0qd"]
+
+[ext_resource type="Script" path="res://Life/Life.cs" id="1_2es0e"]
+
+[sub_resource type="Environment" id="Environment_3b6x8"]
+background_mode = 3
+glow_enabled = true
+glow_normalized = true
+glow_intensity = 0.7
+glow_strength = 0.4
+glow_bloom = 0.8
+glow_blend_mode = 0
+
+[node name="Node2D" type="Node2D"]
+script = ExtResource("1_2es0e")
+
+[node name="Camera2D" type="Camera2D" parent="."]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="Camera2D"]
+environment = SubResource("Environment_3b6x8")

@@ -1,0 +1,14 @@
+[remap]
+
+importer="glsl"
+type="RDShaderFile"
+uid="uid://cxmykahs54vpt"
+path="res://.godot/imported/life.glsl-b0a0ea417bb5dc50001dbc6d1ad34128.res"
+
+[deps]
+
+source_file="res://Life/life.glsl"
+dest_files=["res://.godot/imported/life.glsl-b0a0ea417bb5dc50001dbc6d1ad34128.res"]
+
+[params]
+

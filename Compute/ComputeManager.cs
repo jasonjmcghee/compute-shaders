@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 using Godot;
 using Godot.Collections;
 
-namespace ComputeShader; 
+namespace ComputeShader.Compute; 
 
 public class ComputeManager {
     public readonly RenderingDevice Rd;
@@ -42,30 +42,27 @@ public class ComputeManager {
     public void UpdateBuffer(int bufferId, byte[] data) {
         Rd.BufferUpdate(RidLookup[bufferId], 0, (uint) data.Length, data);
     }
+
+    public void ClearBuffer(int bufferId, int length) {
+        Rd.BufferClear(RidLookup[bufferId], 0, (uint) length);
+    }
     
     public byte[] GetDataFromBuffer(int bufferId) {
         return Rd.BufferGetData(RidLookup[bufferId], 0);
     }
+    
+    public byte[] GetDataFromBuffer(int bufferId, uint size) {
+        return Rd.BufferGetData(RidLookup[bufferId], 0, size);
+    }
 
     public void CleanUp() {
         foreach (ComputePipeline pipeline in _pipelines) {
-            pipeline.cleanUp();
+            pipeline.CleanUp();
         }
 
         Rd.Free();
     }
 
-    public static byte[] ConvertToBytes2<T>(T param) where T : struct {
-        var size = Marshal.SizeOf<T>();
-        var arr = new byte[size];
-
-        ref T r = ref param;
-        var byteSpan = MemoryMarshal.AsBytes(MemoryMarshal.CreateReadOnlySpan(ref r, 1));
-        byteSpan.CopyTo(arr);
-
-        return arr;
-    }
-    
     internal static byte[] ConvertToBytes<T>(T param) where T : struct {
         var size = Marshal.SizeOf(param);
         var arr = new byte[size];
@@ -179,7 +176,7 @@ public class ComputePipeline {
         return buffer;
     }
     
-    public void cleanUp() {
+    public void CleanUp() {
         foreach (Rid rid in to_free) {
             rd.FreeRid(rid);
         }

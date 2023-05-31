@@ -1,6 +1,8 @@
 using System;
 using Godot;
 
+namespace ComputeShader.Slime;
+
 public class AgentManager {
 
 	private Random random = new Random();
@@ -32,9 +34,9 @@ public class AgentManager {
 		};
 	}
 	
-    public Agent[] InitializeAgents() {
+	public Agent[] InitializeAgents() {
 	    
-	    var spawnMode = (AgentSpawnType) settings.spawnType;
+		var spawnMode = (AgentSpawnType) settings.spawnType;
 	    
 		Vector2 center = new Vector2(settings.width / 2f, settings.height / 2f);
 		Vector2 left = new Vector2(settings.width / 4f, settings.height / 2f);
@@ -96,7 +98,7 @@ public class AgentManager {
 		return agents;
 	}
 
-    private float RandomAngle() {
+	private float RandomAngle() {
 		// Generate random components on the unit circle
 		double x = random.NextDouble() * 2 - 1;
 		double y = random.NextDouble() * 2 - 1;
@@ -107,7 +109,7 @@ public class AgentManager {
 		return (float) angle;
 	}
 
-    private Vector2 InsideUnitCircle() {
+	private Vector2 InsideUnitCircle() {
 		double theta = 2.0 * Math.PI * random.NextDouble(); // angle
 		double r = Math.Sqrt(random.NextDouble()); // radius
 

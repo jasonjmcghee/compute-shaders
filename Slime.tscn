@@ -1,6 +1,6 @@
 [gd_scene load_steps=3 format=3 uid="uid://ux62jjrwwf34"]
 
-[ext_resource type="Script" path="res://Slime.cs" id="1_o0lp3"]
+[ext_resource type="Script" path="res://Slime/Slime.cs" id="1_qkoa7"]
 
 [sub_resource type="Environment" id="Environment_llgik"]
 background_mode = 3
@@ -12,7 +12,7 @@ glow_bloom = 0.8
 glow_blend_mode = 0
 
 [node name="Node2D" type="Node2D"]
-script = ExtResource("1_o0lp3")
+script = ExtResource("1_qkoa7")
 
 [node name="Camera2D" type="Camera2D" parent="."]
 texture_filter = 1

@@ -1,3 +1,5 @@
+namespace ComputeShader.Slime;
+
 public struct DiffusionSettings {
 	public int width;
 	public int height;
