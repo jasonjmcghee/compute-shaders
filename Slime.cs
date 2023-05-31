@@ -4,8 +4,8 @@ using ComputeShader;
 public partial class Slime : Node2D {
     [Export] public float baseSpeed = 2.0f;
 
-    private static int width = 1920;
-    private static int height = 1080;
+    private static int width = 1280;
+    private static int height = 720;
     private Sprite2D displaySprite;
 
     // This is our trail data - the data we keep around between frames.
@@ -71,13 +71,14 @@ public partial class Slime : Node2D {
         // Here we provide access to a sample2D that represents our world texture
         displayShaderMaterial.SetShaderParameter("trailMap", trailMapDisplayTexture);
 
+        var size = GetViewportRect().Size;
         // Create the Sprite node
         displaySprite = new Sprite2D {
             TextureFilter = TextureFilterEnum.Linear,
             // We are using a different texture in case we want to upscale, etc.
             // This could change, without impacting the way the world is represented
             Texture = ImageTexture.CreateFromImage(
-                Image.Create(width, height, false, Image.Format.Rgba8)
+                Image.Create((int) size.X, (int) size.Y, false, Image.Format.Rgba8)
             ),
             Material = displayShaderMaterial
         };

@@ -126,6 +126,7 @@ void main() {
 
 
     vec4 newVal = vec4(max(0, blurredCol.r), max(0, blurredCol.g), max(0, blurredCol.b), max(0, blurredCol.a));
+    newVal = vec4(min(1, newVal.r), min(1, newVal.g), min(1, newVal.b), min(1, newVal.a));
 
     trailMap_out_buffer.data[id] = combineColorComponents(newVal);
 }
