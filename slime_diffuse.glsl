@@ -73,12 +73,12 @@ void main() {
     int x = int(id % width);
     int y = int(id / width);
 
-    vec4 sum = vec4(0.0, 0.0, 0.0, 1.0);
+    vec4 sum = vec4(0.0);
     // 3x3 blur
     for (int offsetX = -1; offsetX <= 1; offsetX++) {
         for (int offsetY = -1; offsetY <= 1; offsetY++) {
-            int sampleX = min(width - 1, max(0, x + offsetX));
-            int sampleY = min(height - 1, max(0, y + offsetY));
+            int sampleX = int(mod(x + offsetX, width));
+            int sampleY = int(mod(y + offsetY, height));
 
             uint cell = sampleY * width + sampleX;
             sum += parseCombinedColor(trailMap_in_buffer.data[cell]);
@@ -100,10 +100,12 @@ void main() {
         if (distance < radius) {
             if (mouseLeft) {
                 blurredCol.g = 0;
+                blurredCol.b = 0;
             }
 
             if (mouseRight) {
                 blurredCol.r = 0;
+                blurredCol.b = 0;
             }
         } else if (distance > radius + border && distance <= radius + 2 * border) {
             if (mouseLeft) {
@@ -123,7 +125,7 @@ void main() {
     }
 
 
-    vec4 newVal = vec4(max(0, blurredCol.r), max(0, blurredCol.g), max(0, blurredCol.b), 1.0);
+    vec4 newVal = vec4(max(0, blurredCol.r), max(0, blurredCol.g), max(0, blurredCol.b), max(0, blurredCol.a));
 
     trailMap_out_buffer.data[id] = combineColorComponents(newVal);
 }

@@ -106,11 +106,11 @@ float sense(Agent agent, float sensorAngleOffset) {
     //    ivec4 senseWeight = agent.speciesMask * 2 - 1;
 
     for (int offsetY = -sensorSize; offsetY <= sensorSize; offsetY++) {
-        int sampleY = min(height - 1, max(0, sensorCenterY + offsetY));
+        int sampleY = int(mod(sensorCenterY + offsetY, height));
         uint row = sampleY * width;
 
         for (int offsetX = -sensorSize; offsetX <= sensorSize; offsetX++) {
-            int sampleX = min(width - 1, max(0, sensorCenterX + offsetX));
+            int sampleX = int(mod(sensorCenterX + offsetX, width));
             uint cell = row + sampleX;
 
             vec4 color = parseCombinedColor(trailMap_in_buffer.data[cell]);
@@ -205,13 +205,13 @@ void main() {
     vec2 direction = vec2(cos(agent.angle), sin(agent.angle));
     vec2 newPos = pos + direction * delta * moveSpeed;
 
-    // Clamp position to map boundaries, and pick new random move dir if hit boundary
-    if (newPos.x < 0.0 || newPos.x >= float(width - 1) || newPos.y < 0.0 || newPos.y >= float(height - 1)) {
-        newPos.x = float(min(width-1, max(0, int(newPos.x))));
-        newPos.y = float(min(height-1, max(0, int(newPos.y))));
+    // Wrap...
+    if (newPos.x < 0.0 || newPos.x >= float(width)) {
+        newPos.x = mod(newPos.x, float(width));
+    }
 
-        float randomAngle = scaleToRange01(hash(random)) * 2.0 * 3.1415;
-        agent.angle = randomAngle;
+    if (newPos.y < 0.0 || newPos.y >= float(height)) {
+        newPos.y = mod(newPos.y, float(height));
     }
 
     agents_buffer.agents[id].angle = agent.angle;

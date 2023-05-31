@@ -1,10 +1,20 @@
-[gd_scene load_steps=2 format=3 uid="uid://ux62jjrwwf34"]
+[gd_scene load_steps=3 format=3 uid="uid://ux62jjrwwf34"]
 
 [ext_resource type="Script" path="res://Slime.cs" id="1_o0lp3"]
 
-[node name="Node2D" type="Node2D" node_paths=PackedStringArray("displaySprite")]
+[sub_resource type="Environment" id="Environment_llgik"]
+background_mode = 3
+glow_enabled = true
+glow_normalized = true
+glow_strength = 0.6
+glow_bloom = 0.8
+glow_blend_mode = 0
+
+[node name="Node2D" type="Node2D"]
 script = ExtResource("1_o0lp3")
-displaySprite = NodePath("")
 
 [node name="Camera2D" type="Camera2D" parent="."]
 texture_filter = 1
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="Camera2D"]
+environment = SubResource("Environment_llgik")

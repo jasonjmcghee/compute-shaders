@@ -1,6 +1,8 @@
 shader_type canvas_item;
 
-void fragment()
-{
-    COLOR = texture(TEXTURE, UV);
+uniform sampler2D trailMap;
+
+void fragment() {
+	vec4 color = texture(trailMap, UV);
+    COLOR = color;
 }
