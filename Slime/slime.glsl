@@ -220,7 +220,7 @@ void main() {
 
     uint cell = uint(newPos.y) * width + uint(newPos.x);
 
-    vec4 current = parseCombinedColor(trailMap_out_buffer.data[cell]);
+    vec4 current = parseCombinedColor(trailMap_in_buffer.data[cell]);
 
     vec4 mask = vec4(agents_buffer.agents[id].type * 0.9, 1.0 - agents_buffer.agents[id].type * 0.9, 0.0, 1.0);
     vec4 newVal = mix(current, mask, trailWeight * delta);
