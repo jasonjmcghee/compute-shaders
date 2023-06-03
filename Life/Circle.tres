@@ -1,0 +1,8 @@
+[gd_resource type="ShaderMaterial" load_steps=3 format=3 uid="uid://bnsxp1blrx1bn"]
+
+[ext_resource type="Shader" path="res://Life/circle.gdshader" id="1_yaxx7"]
+[ext_resource type="Texture2D" uid="uid://dqflt7qavlvo6" path="res://Life/circle_mask.jpeg" id="2_7r542"]
+
+[resource]
+shader = ExtResource("1_yaxx7")
+shader_parameter/mask = ExtResource("2_7r542")
