@@ -124,13 +124,13 @@ public partial class Life : Node2D {
             OrganismPosition[] positions =
                 computeManager.GetDataFromBufferAsArray<OrganismPosition>((int)Buffers.OrganismPositions);
             Vector2[] transforms = new Vector2[positions.Length * 3];
+            Vector2[] currentTransforms = multiMesh.Transform2DArray;
 
             for (int i = 0; i < positions.Length; i++) {
                 var pos = positions[i];
-                var transform = new Transform2D(0, new Vector2(pos.X, pos.Y));
-                transforms[3 * i] = transform.X;
-                transforms[3 * i + 1] = transform.Y;
-                transforms[3 * i + 2] = transform.Origin;
+                transforms[3 * i] = currentTransforms[3 * i];
+                transforms[3 * i + 1] = currentTransforms[3 * i + 1];
+                transforms[3 * i + 2] = new Vector2(pos.X, pos.Y);
             }
 
             multiMesh.Transform2DArray = transforms;

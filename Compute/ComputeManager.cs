@@ -7,7 +7,7 @@ using Godot.Collections;
 namespace ComputeShader.Compute;
 
 public class ComputeManager {
-    private const int FramesBetweenSync = 2;
+    private const int FramesPerSync = 1;
 
     public readonly RenderingDevice Rd;
     public readonly Godot.Collections.Dictionary<int, Rid> RidLookup = new();
@@ -29,17 +29,17 @@ public class ComputeManager {
 
     public void Execute() {
         JustSynced = false;
-        Frame = (Frame + 1) % FramesBetweenSync;
+        Frame = (Frame + 1) % FramesPerSync;
 
         foreach (ComputePipeline pipeline in _pipelines) {
             pipeline.Execute();
         }
 
-        // if (Frame == FramesBetweenSync - 1) {
-        Rd.Submit();
-        Rd.Sync();
-        JustSynced = true;
-        // }
+        if (Frame == FramesPerSync - 1) {
+            Rd.Submit();
+            Rd.Sync();
+            JustSynced = true;
+        }
     }
 
     public void UpdateBuffer<T>(int bufferId, T obj) where T : struct {
