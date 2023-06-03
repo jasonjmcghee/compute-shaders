@@ -5,12 +5,15 @@
 The abstraction layer I built to dramatically simplify the complexity of compute shaders, from my perspective.
 
 I can only keep so much complexity in my head, and this approach simplifies so much.
-- (Almost) No thinking about how to turn data in C# into data GLSL will understand - essentially, only use `struct` with primitive fields, or lists of them.
+
+- (Almost) No thinking about how to turn data in C# into data GLSL will understand - essentially, only use `struct` with
+  primitive fields, or lists of them.
 - Write any number of pipelines which will be sequentially executed when you call `execute()` on the `ComputeManager`
 - You can signify buffers with ids, for example, from an `enum` to simplify your code and not deal with `Rid`.
 - Easily read from, update, or clear buffers using the above ids pattern.
 
 ### Notes
+
 - Currently only supports `StructuredBuffer`, but could easily be extended to others with the same pattern.
 - Currently does not support using a portion of a buffer (all or nothing), but again, easy to modify this.
 - You can always dip down to the lower layer of abstraction (Godot layer).
@@ -80,14 +83,15 @@ public override void _Process(double delta) {
 
 ## Slime
 
-Heavily used: [Coding Adventure: Ant and Slime Simulations](https://www.youtube.com/watch?v=X-iSQQgOd1A) by Sebastian Lague
+Heavily used: [Coding Adventure: Ant and Slime Simulations](https://www.youtube.com/watch?v=X-iSQQgOd1A) by Sebastian
+Lague
 for learning / foundation.
 
 Updates:
+
 - [x] Added mouse behavior to allow drawing slime
 
 ![image](https://github.com/jasonjmcghee/compute-shaders/assets/1522149/8c6a750a-2d55-4b14-b755-c4b3af2cc2ae)
-
 
 ## Life
 

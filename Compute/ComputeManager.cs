@@ -4,11 +4,16 @@ using System.Runtime.InteropServices;
 using Godot;
 using Godot.Collections;
 
-namespace ComputeShader.Compute; 
+namespace ComputeShader.Compute;
 
 public class ComputeManager {
+    private const int FramesBetweenSync = 2;
+
     public readonly RenderingDevice Rd;
     public readonly Godot.Collections.Dictionary<int, Rid> RidLookup = new();
+
+    public int Frame { get; private set; }
+    public bool JustSynced { get; private set; }
 
     private readonly List<ComputePipeline> _pipelines = new();
 
@@ -21,20 +26,26 @@ public class ComputeManager {
         _pipelines.Add(pipeline);
         return pipeline;
     }
-    
+
     public void Execute() {
+        JustSynced = false;
+        Frame = (Frame + 1) % FramesBetweenSync;
+
         foreach (ComputePipeline pipeline in _pipelines) {
             pipeline.Execute();
         }
-        
+
+        // if (Frame == FramesBetweenSync - 1) {
         Rd.Submit();
         Rd.Sync();
+        JustSynced = true;
+        // }
     }
-    
+
     public void UpdateBuffer<T>(int bufferId, T obj) where T : struct {
         UpdateBuffer(bufferId, ConvertToBytes(obj));
     }
-    
+
     public void UpdateBuffer<T>(int bufferId, T[] objects) where T : struct {
         UpdateBuffer(bufferId, ConvertArrayToBytes(objects));
     }
@@ -46,11 +57,46 @@ public class ComputeManager {
     public void ClearBuffer(int bufferId, int length) {
         Rd.BufferClear(RidLookup[bufferId], 0, (uint) length);
     }
-    
+
     public byte[] GetDataFromBuffer(int bufferId) {
         return Rd.BufferGetData(RidLookup[bufferId], 0);
     }
-    
+
+    public T[] GetDataFromBufferAsArray<T>(int bufferId) where T : struct {
+        var bytes = Rd.BufferGetData(RidLookup[bufferId], 0);
+        int structSize = Marshal.SizeOf<T>();
+        if (bytes.Length % structSize != 0) {
+            throw new ArgumentException("Byte array does not represent a sequence of the given struct type");
+        }
+
+        int structCount = bytes.Length / structSize;
+        T[] structArray = new T[structCount];
+
+        var handle = GCHandle.Alloc(bytes, GCHandleType.Pinned);
+        try {
+            IntPtr startPtr = handle.AddrOfPinnedObject();
+            for (int i = 0; i < structCount; i++) {
+                structArray[i] = Marshal.PtrToStructure<T>(startPtr + structSize * i);
+            }
+        }
+        finally {
+            handle.Free();
+        }
+
+        return structArray;
+    }
+
+    public T GetDataFromBuffer<T>(int bufferId) where T : struct {
+        var bytes = Rd.BufferGetData(RidLookup[bufferId], 0);
+        var handle = GCHandle.Alloc(bytes, GCHandleType.Pinned);
+        try {
+            return (T) Marshal.PtrToStructure(handle.AddrOfPinnedObject(), typeof(T));
+        }
+        finally {
+            handle.Free();
+        }
+    }
+
     public byte[] GetDataFromBuffer(int bufferId, uint size) {
         return Rd.BufferGetData(RidLookup[bufferId], 0, size);
     }
@@ -116,17 +162,17 @@ public class ComputePipeline {
         AddShader(shaderPath);
         uniforms = new Array<RDUniform>();
     }
-    
+
     public ComputePipeline StoreAndAddStep<T>(int bufferId, T obj) where T : struct {
         manager.RidLookup[bufferId] = CreateStorageBufferOnRd(ComputeManager.ConvertToBytes(obj));
         return this;
     }
-    
+
     public ComputePipeline StoreAndAddStep<T>(int bufferId, T[] objects) where T : struct {
         manager.RidLookup[bufferId] = CreateStorageBufferOnRd(ComputeManager.ConvertArrayToBytes(objects));
         return this;
     }
-    
+
     public ComputePipeline AddStep(int referenceBufferId) {
         CreateStorageBufferOnRdWithRid(manager.RidLookup[referenceBufferId]);
         return this;
@@ -146,6 +192,7 @@ public class ComputePipeline {
         if (!isBuilt) {
             throw new Exception("Must call `Build` before executing.");
         }
+
         var computeList = rd.ComputeListBegin();
         rd.ComputeListBindComputePipeline(computeList, pipeline);
         rd.ComputeListBindUniformSet(computeList, uniformSet, 0);
@@ -158,7 +205,7 @@ public class ComputePipeline {
         shader = rd.ShaderCreateFromSpirV(compute.GetSpirV());
         to_free.Add(shader);
     }
-    
+
     private Rid CreateStorageBufferOnRd(byte[] bytes) {
         var buffer = rd.StorageBufferCreate((uint) bytes.Length, bytes);
         to_free.Add(buffer);
@@ -175,7 +222,7 @@ public class ComputePipeline {
 
         return buffer;
     }
-    
+
     public void CleanUp() {
         foreach (Rid rid in to_free) {
             rd.FreeRid(rid);

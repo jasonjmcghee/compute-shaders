@@ -1,20 +1,21 @@
-[gd_scene load_steps=3 format=3 uid="uid://cujnk5mtuq0qd"]
+[gd_scene load_steps=5 format=3 uid="uid://bib4bk4t3yy18"]
 
 [ext_resource type="Script" path="res://Life/Life.cs" id="1_2es0e"]
+[ext_resource type="Material" uid="uid://bnsxp1blrx1bn" path="res://Life/Circle.tres" id="2_orxai"]
+[ext_resource type="Environment" uid="uid://cnp0bvl84yslk" path="res://Life/Environment.tres" id="3_7nb4w"]
 
-[sub_resource type="Environment" id="Environment_3b6x8"]
-background_mode = 3
-glow_enabled = true
-glow_normalized = true
-glow_intensity = 0.7
-glow_strength = 0.4
-glow_bloom = 0.8
-glow_blend_mode = 0
+[sub_resource type="QuadMesh" id="QuadMesh_wec2a"]
 
 [node name="Node2D" type="Node2D"]
 script = ExtResource("1_2es0e")
 
 [node name="Camera2D" type="Camera2D" parent="."]
+material = ExtResource("2_orxai")
+zoom = Vector2(8, 8)
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="Camera2D"]
-environment = SubResource("Environment_3b6x8")
+environment = ExtResource("3_7nb4w")
+
+[node name="MeshInstance2D" type="MeshInstance2D" parent="."]
+material = ExtResource("2_orxai")
+mesh = SubResource("QuadMesh_wec2a")

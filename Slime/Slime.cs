@@ -1,24 +1,24 @@
 using ComputeShader.Compute;
 using Godot;
 
-namespace ComputeShader.Slime; 
+namespace ComputeShader.Slime;
 
 public partial class Slime : Node2D {
     [Export] public float baseSpeed = 2.0f;
 
-    private static int width = 1280;
-    private static int height = 720;
+    private static int width = 1920;
+    private static int height = 1080;
     private Sprite2D displaySprite;
 
     // This is our trail data - the data we keep around between frames.
     private byte[] trailMapReadData;
-    
+
     // This is our texture - it contains the above data as an image.
     private ImageTexture trailMapDisplayTexture;
-    
+
     // How much time has passed
     private double time;
-    
+
     // Managers for our pipeline, agents, and trails
     private ComputeManager computeManager;
     private AgentManager agentManager;
@@ -45,7 +45,7 @@ public partial class Slime : Node2D {
         var trailMapImage = Image.Create(width, height, false, Image.Format.Rgba8);
         trailMapDisplayTexture = ImageTexture.CreateFromImage(trailMapImage);
         trailMapReadData = trailMapImage.GetData();
-        
+
         // Main Pipeline
         computeManager
             .AddPipeline("res://Slime/slime.glsl", agentManager.settings.numAgents, 1, 1)
@@ -69,7 +69,7 @@ public partial class Slime : Node2D {
 
         // This is what we use to display the world
         var displayShaderMaterial = new ShaderMaterial {Shader = GD.Load<Shader>("res://Slime/DisplayShader.gdshader")};
-        
+
         // Here we provide access to a sample2D that represents our world texture
         displayShaderMaterial.SetShaderParameter("trailMap", trailMapDisplayTexture);
 
@@ -93,8 +93,10 @@ public partial class Slime : Node2D {
     public override void _Process(double delta) {
         time += delta;
 
-        // Because of our double buffer + swap + double buffer, we're back to TrailMapWriteData
-        computeManager.UpdateBuffer((int) Buffers.TrailMapWriteData, trailMapReadData);
+        if (computeManager.JustSynced) {
+            // Because of our double buffer + swap + double buffer, we're back to TrailMapWriteData
+            computeManager.UpdateBuffer((int) Buffers.TrailMapWriteData, trailMapReadData);
+        }
 
         var mousePos = GetViewport().GetMousePosition();
 
@@ -111,7 +113,7 @@ public partial class Slime : Node2D {
 
         // Update the settings based on current state of input, time, etc.
         computeManager.UpdateBuffer(
-            (int) Buffers.DiffuseParams, 
+            (int) Buffers.DiffuseParams,
             diffusionManager.BuildSettings(width, height, baseSpeed) with {
                 delta = (float) delta,
                 mouseLeft = Input.IsMouseButtonPressed(MouseButton.Left) && !Input.IsKeyPressed(Key.Space),
@@ -125,13 +127,15 @@ public partial class Slime : Node2D {
         // Execute the pipeline! The is where all the compute-shader calculations happen.
         computeManager.Execute();
 
-        // Get back the data from the last-written-to buffer, which is `TrailMapReadData`
-        trailMapReadData = computeManager.GetDataFromBuffer((int) Buffers.TrailMapReadData);
+        if (computeManager.JustSynced) {
+            // Get back the data from the last-written-to buffer, which is `TrailMapReadData`
+            trailMapReadData = computeManager.GetDataFromBuffer((int) Buffers.TrailMapReadData);
 
-        // Update the texture with the latest data.
-        trailMapDisplayTexture.Update(
-            Image.CreateFromData(width, height, false, Image.Format.Rgba8, trailMapReadData)
-        );
+            // Update the texture with the latest data.
+            trailMapDisplayTexture.Update(
+                Image.CreateFromData(width, height, false, Image.Format.Rgba8, trailMapReadData)
+            );
+        }
     }
 
     public override void _ExitTree() {
