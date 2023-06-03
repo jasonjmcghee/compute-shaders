@@ -49,26 +49,27 @@ public partial class Slime : Node2D {
         // Main Pipeline
         computeManager
             .AddPipeline("res://Slime/slime.glsl", agentManager.settings.numAgents, 1, 1)
-            .StoreAndAddStep((int) Buffers.Agents, agentManager.InitializeAgents())
-            .StoreAndAddStep((int) Buffers.AgentParams, agentManager.settings)
+            .StoreAndAddStep((int)Buffers.Agents, agentManager.InitializeAgents())
+            .StoreAndAddStep((int)Buffers.AgentParams, agentManager.settings)
             // Double buffer, so we can scan and update without mutation to the current state
-            .StoreAndAddStep((int) Buffers.TrailMapReadData, trailMapReadData)
-            .StoreAndAddStep((int) Buffers.TrailMapWriteData, trailMapReadData)
+            .StoreAndAddStep((int)Buffers.TrailMapReadData, trailMapReadData)
+            .StoreAndAddStep((int)Buffers.TrailMapWriteData, trailMapReadData)
             .Build();
 
         // Diffuse Pipeline
         computeManager
-            .AddPipeline("res://Slime/slime_diffuse.glsl", (uint) (width * height), 1, 1)
-            .StoreAndAddStep((int) Buffers.DiffuseParams, diffusionManager.settings)
+            .AddPipeline("res://Slime/slime_diffuse.glsl", (uint)(width * height), 1, 1)
+            .StoreAndAddStep((int)Buffers.DiffuseParams, diffusionManager.settings)
             // Double buffer, so we can scan and update without mutation to the current state
             // Note that it reuses buffers from the previous, but swaps them.
             // This allows us to not allocate memory for new ones.
-            .AddStep((int) Buffers.TrailMapWriteData)
-            .AddStep((int) Buffers.TrailMapReadData)
+            .AddStep((int)Buffers.TrailMapWriteData)
+            .AddStep((int)Buffers.TrailMapReadData)
             .Build();
 
         // This is what we use to display the world
-        var displayShaderMaterial = new ShaderMaterial {Shader = GD.Load<Shader>("res://Slime/DisplayShader.gdshader")};
+        var displayShaderMaterial = new ShaderMaterial
+            { Shader = GD.Load<Shader>("res://Slime/DisplayShader.gdshader") };
 
         // Here we provide access to a sample2D that represents our world texture
         displayShaderMaterial.SetShaderParameter("trailMap", trailMapDisplayTexture);
@@ -80,7 +81,7 @@ public partial class Slime : Node2D {
             // We are using a different texture in case we want to upscale, etc.
             // This could change, without impacting the way the world is represented
             Texture = ImageTexture.CreateFromImage(
-                Image.Create((int) size.X, (int) size.Y, false, Image.Format.Rgba8)
+                Image.Create((int)size.X, (int)size.Y, false, Image.Format.Rgba8)
             ),
             Material = displayShaderMaterial
         };
@@ -95,16 +96,16 @@ public partial class Slime : Node2D {
 
         if (computeManager.JustSynced) {
             // Because of our double buffer + swap + double buffer, we're back to TrailMapWriteData
-            computeManager.UpdateBuffer((int) Buffers.TrailMapWriteData, trailMapReadData);
+            computeManager.UpdateBuffer((int)Buffers.TrailMapWriteData, trailMapReadData);
         }
 
         var mousePos = GetViewport().GetMousePosition();
 
         // Update the settings based on current state of input, time, etc.
         computeManager.UpdateBuffer(
-            (int) Buffers.AgentParams,
+            (int)Buffers.AgentParams,
             agentManager.BuildSettings(width, height, baseSpeed) with {
-                delta = (float) delta, time = (float) time,
+                delta = (float)delta, time = (float)time,
                 mouseLeft = Input.IsMouseButtonPressed(MouseButton.Left) && Input.IsKeyPressed(Key.Space),
                 mouseRight = Input.IsMouseButtonPressed(MouseButton.Right) && Input.IsKeyPressed(Key.Space),
                 mouseX = mousePos.X, mouseY = mousePos.Y,
@@ -113,9 +114,9 @@ public partial class Slime : Node2D {
 
         // Update the settings based on current state of input, time, etc.
         computeManager.UpdateBuffer(
-            (int) Buffers.DiffuseParams,
+            (int)Buffers.DiffuseParams,
             diffusionManager.BuildSettings(width, height, baseSpeed) with {
-                delta = (float) delta,
+                delta = (float)delta,
                 mouseLeft = Input.IsMouseButtonPressed(MouseButton.Left) && !Input.IsKeyPressed(Key.Space),
                 mouseRight = Input.IsMouseButtonPressed(MouseButton.Right) && !Input.IsKeyPressed(Key.Space),
                 mouseX = mousePos.X, mouseY = mousePos.Y,
@@ -129,7 +130,7 @@ public partial class Slime : Node2D {
 
         if (computeManager.JustSynced) {
             // Get back the data from the last-written-to buffer, which is `TrailMapReadData`
-            trailMapReadData = computeManager.GetDataFromBuffer((int) Buffers.TrailMapReadData);
+            trailMapReadData = computeManager.GetDataFromBuffer((int)Buffers.TrailMapReadData);
 
             // Update the texture with the latest data.
             trailMapDisplayTexture.Update(

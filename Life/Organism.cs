@@ -11,27 +11,26 @@ public class OrganismManager {
     private readonly uint numOrganisms;
     private readonly int numSpecies;
 
-    public OrganismManager(uint numOrganisms, int numSpecies, int width, int height, float baseSpeed) {
+    public OrganismManager(uint numOrganisms, int numSpecies, int width, int height) {
         this.numOrganisms = numOrganisms;
         this.numSpecies = numSpecies;
-        settings = BuildSettings(width, height, baseSpeed);
+        settings = BuildSettings(width, height);
     }
 
-    public OrganismSettings BuildSettings(int width, int height, float baseSpeed) {
+    public OrganismSettings BuildSettings(int width, int height) {
         return new OrganismSettings {
             numOrganisms = numOrganisms,
             width = width,
             height = height,
-            delta = 0f,
-            moveSpeed = 1f * baseSpeed,
+            delta = 0.01f,
             sensorSize = 10,
-            spawnType = (int) OrganismSpawnType.RandomCircle,
+            spawnType = (int)OrganismSpawnType.RandomCircle,
             numSpecies = numSpecies,
         };
     }
 
     public Organism[] Initialize() {
-        var spawnMode = (OrganismSpawnType) settings.spawnType;
+        var spawnMode = (OrganismSpawnType)settings.spawnType;
 
         Vector2 center = new Vector2(settings.width / 2f, settings.height / 2f);
         Vector2 left = new Vector2(settings.width / 4f, settings.height / 2f);
@@ -67,7 +66,7 @@ public class OrganismManager {
                 OrganismInfo = new OrganismInfo {
                     velX = 0,
                     velY = 0,
-                    type = (uint) (i % 4) + 1,
+                    type = (uint)(i % 4),
                 }
             };
         }
@@ -79,8 +78,8 @@ public class OrganismManager {
         double theta = 2.0 * Math.PI * random.NextDouble(); // angle
         double r = Math.Sqrt(random.NextDouble()); // radius
 
-        float x = (float) (r * Math.Cos(theta));
-        float y = (float) (r * Math.Sin(theta));
+        float x = (float)(r * Math.Cos(theta));
+        float y = (float)(r * Math.Sin(theta));
 
         return new Vector2(x, y);
     }
@@ -115,7 +114,6 @@ public struct OrganismSettings {
     public int width;
     public int height;
     public float delta;
-    public float moveSpeed;
     public int sensorSize;
     public int spawnType;
     public int numSpecies;

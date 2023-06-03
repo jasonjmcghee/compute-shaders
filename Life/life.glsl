@@ -17,7 +17,6 @@ struct Params {
     int width;
     int height;
     float delta;
-    float moveSpeed;
     int sensorSize;
     int spawnType;
     int numSpecies;
@@ -80,15 +79,16 @@ vec2 sense(Organism organism, vec2 pos) {
         if (i == id) continue;
         Position targetPosition = positions.data[i];
         vec2 targetPos = vec2(targetPosition.x, targetPosition.y);
+
         float distX = targetPos.x - pos.x;
-        float wrappedDistX = distX - width;
+        float wrappedDistX = distX - sign(distX) * width;
         float distY = targetPos.y - pos.y;
-        float wrappedDistY = distY - height;
+        float wrappedDistY = distY - sign(distY) * height;
 
         // If it wraps, force sign is flipped
         // If it doesn't, it's not.
         float effectiveDistX = abs(distX) < abs(wrappedDistX) ? distX : wrappedDistX;
-        float effectiveDistY = abs(distY) < abs(wrappedDistY) ? distY: wrappedDistY;
+        float effectiveDistY = abs(distY) < abs(wrappedDistY) ? distY : wrappedDistY;
 
         vec2 dist = vec2(effectiveDistX, effectiveDistY);
         float r = sqrt(float(dist.x * dist.x + dist.y * dist.y));
@@ -98,8 +98,8 @@ vec2 sense(Organism organism, vec2 pos) {
 
         vec2 normalizedDist = dist / r;
         totalForce += normalizedDist * force(
-        r / float(sensorSize),
-        attract(organism.type, organisms.data[i].type)
+            r / float(sensorSize),
+            attract(organism.type, organisms.data[i].type)
         );
     }
 
@@ -111,7 +111,6 @@ void main() {
     int width = params_buffer.params.width;
     int height = params_buffer.params.height;
     float delta = params_buffer.params.delta;
-    float moveSpeed = params_buffer.params.moveSpeed;
 
     uint id = gl_GlobalInvocationID.x;
 

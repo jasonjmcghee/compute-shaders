@@ -5,11 +5,11 @@
         <RootNamespace>ComputeShader</RootNamespace>
     </PropertyGroup>
     <ItemGroup>
-        <Content Include="Life\circle.gdshader" />
-        <Content Include="Life\life.glsl" />
-        <Content Include="README.md" />
-        <Content Include="Slime\DisplayShader.gdshader" />
-        <Content Include="Slime\slime.glsl" />
-        <Content Include="Slime\slime_diffuse.glsl" />
+        <Content Include="Life\circle.gdshader"/>
+        <Content Include="Life\life.glsl"/>
+        <Content Include="README.md"/>
+        <Content Include="Slime\DisplayShader.gdshader"/>
+        <Content Include="Slime\slime.glsl"/>
+        <Content Include="Slime\slime_diffuse.glsl"/>
     </ItemGroup>
 </Project>

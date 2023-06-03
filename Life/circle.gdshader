@@ -40,7 +40,7 @@ void fragment() {
     dist = clamp(dist, 0.0, 1.0);
 
     // Get the noise value at this point
-    float n = noise(UV + vec2(TIME));
+    float n = noise(UV);
 
     // Apply the vignette: Multiply the current color by (1 - dist), then add dist * noise
 	COLOR = color * mix(COLOR, vec4(n, n, n, n), dist);

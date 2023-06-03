@@ -51,11 +51,11 @@ public class ComputeManager {
     }
 
     public void UpdateBuffer(int bufferId, byte[] data) {
-        Rd.BufferUpdate(RidLookup[bufferId], 0, (uint) data.Length, data);
+        Rd.BufferUpdate(RidLookup[bufferId], 0, (uint)data.Length, data);
     }
 
     public void ClearBuffer(int bufferId, int length) {
-        Rd.BufferClear(RidLookup[bufferId], 0, (uint) length);
+        Rd.BufferClear(RidLookup[bufferId], 0, (uint)length);
     }
 
     public byte[] GetDataFromBuffer(int bufferId) {
@@ -90,7 +90,7 @@ public class ComputeManager {
         var bytes = Rd.BufferGetData(RidLookup[bufferId], 0);
         var handle = GCHandle.Alloc(bytes, GCHandleType.Pinned);
         try {
-            return (T) Marshal.PtrToStructure(handle.AddrOfPinnedObject(), typeof(T));
+            return (T)Marshal.PtrToStructure(handle.AddrOfPinnedObject(), typeof(T));
         }
         finally {
             handle.Free();
@@ -207,7 +207,7 @@ public class ComputePipeline {
     }
 
     private Rid CreateStorageBufferOnRd(byte[] bytes) {
-        var buffer = rd.StorageBufferCreate((uint) bytes.Length, bytes);
+        var buffer = rd.StorageBufferCreate((uint)bytes.Length, bytes);
         to_free.Add(buffer);
 
         return CreateStorageBufferOnRdWithRid(buffer);
@@ -217,7 +217,7 @@ public class ComputePipeline {
         uniforms.Add(new RDUniform {
             UniformType = RenderingDevice.UniformType.StorageBuffer,
             Binding = uniforms.Count,
-            _Ids = new Array<Rid> {buffer}
+            _Ids = new Array<Rid> { buffer }
         });
 
         return buffer;

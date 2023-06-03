@@ -29,12 +29,12 @@ public class AgentManager {
             mouseY = 0,
             mouseLeft = false,
             mouseRight = false,
-            spawnType = (int) AgentSpawnType.Other,
+            spawnType = (int)AgentSpawnType.Other,
         };
     }
 
     public Agent[] InitializeAgents() {
-        var spawnMode = (AgentSpawnType) settings.spawnType;
+        var spawnMode = (AgentSpawnType)settings.spawnType;
 
         Vector2 center = new Vector2(settings.width / 2f, settings.height / 2f);
         Vector2 left = new Vector2(settings.width / 4f, settings.height / 2f);
@@ -104,15 +104,15 @@ public class AgentManager {
         // Calculate the angle in radians
         double angle = Math.Atan2(y, x);
 
-        return (float) angle;
+        return (float)angle;
     }
 
     private Vector2 InsideUnitCircle() {
         double theta = 2.0 * Math.PI * random.NextDouble(); // angle
         double r = Math.Sqrt(random.NextDouble()); // radius
 
-        float x = (float) (r * Math.Cos(theta));
-        float y = (float) (r * Math.Sin(theta));
+        float x = (float)(r * Math.Cos(theta));
+        float y = (float)(r * Math.Sin(theta));
 
         return new Vector2(x, y);
     }

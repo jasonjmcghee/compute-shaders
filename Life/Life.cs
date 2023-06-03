@@ -5,8 +5,6 @@ using ComputeShader.Compute;
 using ComputeShader.Life;
 
 public partial class Life : Node2D {
-    [Export] public float baseSpeed = 2.0f;
-
     [Export] public float[] attractionMatrix = {
         1f, 0.01f, -0.02f, 0.08f, // First column
         1f, -1f, 1f, 1.0f, // Second column
@@ -14,21 +12,15 @@ public partial class Life : Node2D {
         0.05f, 0.05f, 0.2f, -0.1f // Fourth column
     };
 
-    private static int width = 200;
+    private static int width = 300;
     private static int height = 200;
-
-    // How much time has passed
-    private double time;
 
     // Managers for our pipeline and organisms
     private ComputeManager computeManager;
     private OrganismManager organismManager;
     private int frame;
-    private int organismMapDataLength;
     private MultiMesh multiMesh;
-    private int multiMeshBufferLength;
     private Camera2D camera;
-    private byte[] organismMapData;
 
     // An easy way to reference bits of our pipeline
     // Effectively addresses to memory that we can read from and write to
@@ -45,7 +37,7 @@ public partial class Life : Node2D {
 
         // Initialize our managers
         organismManager =
-            new OrganismManager(10000, (int) Math.Sqrt(attractionMatrix.Length), width, height, baseSpeed);
+            new OrganismManager(10000, (int)Math.Sqrt(attractionMatrix.Length), width, height);
         var organisms = organismManager.Initialize();
 
         computeManager = new ComputeManager();
@@ -59,11 +51,12 @@ public partial class Life : Node2D {
         // Set the mesh and texture
         multiMesh.Mesh = new QuadMesh();
 
-        Color[] colors = new Color[] {
-            Colors.Red,
-            Colors.Green,
-            Colors.Purple,
-            Colors.Blue,
+        Color[] colors = {
+            new("#b13e53"),
+            new("#ffcd75"),
+            new("#38b764"),
+            new("#3b5dc9"),
+            new("#5d275d"),
             Colors.White,
             Colors.Pink,
         };
@@ -89,16 +82,13 @@ public partial class Life : Node2D {
         };
         AddChild(multiMeshInstance2D);
 
-        var multiMeshBuffer = multiMesh.Transform2DArray;
-        multiMeshBufferLength = multiMeshBuffer.Length * sizeof(float);
-
         // Main Pipeline
         computeManager
             .AddPipeline("res://Life/life.glsl", organismManager.settings.numOrganisms, 1, 1)
-            .StoreAndAddStep((int) Buffers.Organisms, organismInfos)
-            .StoreAndAddStep((int) Buffers.OrganismPositions, organismPositions)
-            .StoreAndAddStep((int) Buffers.OrganismParams, organismManager.settings)
-            .StoreAndAddStep((int) Buffers.OrganismAttraction, attractionMatrix)
+            .StoreAndAddStep((int)Buffers.Organisms, organismInfos)
+            .StoreAndAddStep((int)Buffers.OrganismPositions, organismPositions)
+            .StoreAndAddStep((int)Buffers.OrganismParams, organismManager.settings)
+            .StoreAndAddStep((int)Buffers.OrganismAttraction, attractionMatrix)
             .Build();
     }
 
@@ -107,30 +97,32 @@ public partial class Life : Node2D {
         if (Input.IsKeyPressed(Key.Bracketleft)) {
             camera.Zoom = new Vector2(Mathf.Pow(camera.Zoom.X, 0.99f), Mathf.Pow(camera.Zoom.Y, 0.99f));
         }
-
-        if (Input.IsKeyPressed(Key.Bracketright)) {
+        else if (Input.IsKeyPressed(Key.Bracketright)) {
             camera.Zoom = new Vector2(Mathf.Pow(camera.Zoom.X, 1.01f), Mathf.Pow(camera.Zoom.Y, 1.01f));
         }
 
-        time += delta;
+        if (Input.IsKeyPressed(Key.Up)) {
+            camera.Position += Vector2.Up * 1f;
+        }
+        else if (Input.IsKeyPressed(Key.Down)) {
+            camera.Position += Vector2.Down * 1f;
+        }
 
-        // Update the settings based on current state of input, time, etc.
-        computeManager.UpdateBuffer(
-            (int) Buffers.OrganismParams,
-            organismManager.BuildSettings(width, height, baseSpeed) with {
-                delta = (float) delta,
-                frameNum = computeManager.Frame
-            }
-        );
+        if (Input.IsKeyPressed(Key.Right)) {
+            camera.Position += Vector2.Right * 1f;
+        }
+        else if (Input.IsKeyPressed(Key.Left)) {
+            camera.Position += Vector2.Left * 1f;
+        }
 
-        computeManager.UpdateBuffer((int) Buffers.OrganismAttraction, attractionMatrix);
+        computeManager.UpdateBuffer((int)Buffers.OrganismAttraction, attractionMatrix);
 
         // Execute the pipeline! The is where all the compute-shader calculations happen.
         computeManager.Execute();
 
         if (computeManager.JustSynced) {
             OrganismPosition[] positions =
-                computeManager.GetDataFromBufferAsArray<OrganismPosition>((int) Buffers.OrganismPositions);
+                computeManager.GetDataFromBufferAsArray<OrganismPosition>((int)Buffers.OrganismPositions);
             Vector2[] transforms = new Vector2[positions.Length * 3];
 
             for (int i = 0; i < positions.Length; i++) {
