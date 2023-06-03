@@ -1,4 +1,17 @@
 ﻿# Experiments with Compute Shaders
+ 
+Projects within:
+ 
+| Slime      | Life |
+| ----------- | ----------- |
+|  ![image](https://github.com/jasonjmcghee/compute-shaders/assets/1522149/8c6a750a-2d55-4b14-b755-c4b3af2cc2ae)  |  ![image](https://github.com/jasonjmcghee/compute-shaders/assets/1522149/7bf7e243-7833-42e2-a88e-c37bba9fadf1) |
+
+
+## How this could be useful to you
+- Has a couple of rather different examples leveraging compute shaders (both 2D)
+- Has a special `ComputeManager` that creates nice abstraction on top of Godot Compute Shader `RenderingDevice` pattern.
+
+So, what is this `ComputeManager`?
 
 ## `ComputeManager`
 
@@ -95,4 +108,13 @@ Updates:
 
 ## Life
 
-_In Progress_
+Heavily inspired by: https://particle-life.com/
+
+Todo
+- [ ] Spend more time on this one to figure out how to optimize the behavior.
+    - Right now it compares every particle to every other particle while executing the compute shader, which is crazy.
+- [ ] Add a UI for modifying the Attraction Matrix and how many types of particles there are.
+
+Not sure that using MultiMesh2D is the right approach either.
+
+![image](https://github.com/jasonjmcghee/compute-shaders/assets/1522149/7bf7e243-7833-42e2-a88e-c37bba9fadf1)
