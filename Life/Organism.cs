@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.Collections.Generic;
+using System.Runtime.InteropServices;
 
 namespace ComputeShader.Life;
 
@@ -83,6 +84,65 @@ public class OrganismManager {
 
         return new Vector2(x, y);
     }
+    
+    /**
+	 * Create bins here and pass them to the GPU to constrain our search space.
+	 *
+	 * We might want to do a list of lists, then have a struct for each that says
+	 * for each bin, where it starts and stops.
+	 *
+	 * Then for each organism, which bin it belongs to.
+	 */
+	public BinArrayBuffers BuildOrganismBins(OrganismPosition[] organismPositions) {
+	    var numBinsX = settings.width / settings.sensorSize;
+	    var numBinsY = settings.height / settings.sensorSize;
+	    var sensorRecip = 1.0f / settings.sensorSize;
+	    
+	    var binnedIndices = new List<int>[numBinsX, numBinsY];
+		var organismBinMembership = new int[organismPositions.Length];
+		var flatBinnedOrganismIndices = new List<int>();
+		var bins = new List<Bin>();
+
+		for (int i = 0; i < organismPositions.Length; i++) {
+			var organism = organismPositions[i];
+			var binX = (int) (organism.X * sensorRecip);
+			var binY = (int) (organism.Y * sensorRecip);
+
+			binnedIndices[binX, binY] ??= new List<int>();
+			binnedIndices[binX, binY].Add(i);
+			organismBinMembership[i] = binX + binY * numBinsX;
+		}
+		
+		for (int j = 0; j < numBinsY; j++) {
+			var row = j * numBinsX;
+			for (int i = 0; i < numBinsX; i++) {
+				binnedIndices[i, j] ??= new List<int>();
+				var binnedOrganismIndices = binnedIndices[i, j];
+				var start = flatBinnedOrganismIndices.Count;
+				var end = start + binnedOrganismIndices.Count;
+				flatBinnedOrganismIndices.AddRange(binnedOrganismIndices);
+				var bin = new Bin {
+					start = start,
+					end = end,
+					left = (i - 1 + numBinsX) % numBinsX + j * numBinsX,
+					upLeft = (i - 1 + numBinsX) % numBinsX + ((j - 1 + numBinsY) % numBinsY) * numBinsX,
+					up = i + ((j - 1 + numBinsY) % numBinsY) * numBinsX,
+					upRight = (i + 1) % numBinsX + (j - 1 + numBinsY) % numBinsY * numBinsX,
+					right = (i + 1) % numBinsX + j * numBinsX,
+					downRight = (i + 1) % numBinsX + (j + 1) % numBinsY * numBinsX,
+					down = i + (j + 1) % numBinsY * numBinsX,
+					downLeft = (i - 1 + numBinsX) % numBinsX + (j + 1) % numBinsY * numBinsX,
+				};
+				bins.Add(bin);
+			}
+		}
+
+		return new BinArrayBuffers {
+			organismBinMembership = organismBinMembership,
+			binsArray = bins.ToArray(),
+			flatBinnedIndices = flatBinnedOrganismIndices.ToArray()
+		};
+	}
 }
 
 public enum OrganismSpawnType {

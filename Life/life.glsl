@@ -23,6 +23,19 @@ struct Params {
     int frameNum;
 };
 
+struct Bin {
+    int start;
+    int end;
+    int left;
+    int upLeft;
+    int up;
+    int upRight;
+    int right;
+    int downRight;
+    int down;
+    int downLeft;
+};
+
 // Invocations in the (x, y, z) dimension
 layout(local_size_x = 256, local_size_y = 1, local_size_z = 1) in;
 
@@ -37,13 +50,28 @@ layout(set = 0, binding = 1, std430) restrict buffer OrganismsPositions {
 }
 positions;
 
-layout(set = 0, binding = 2, std430) readonly buffer ParamsBuffer
+layout(set = 0, binding = 2, std430) restrict readonly buffer Bins {
+    Bin data[];
+}
+bins;
+
+layout(set = 0, binding = 3, std430) restrict readonly buffer BinMembership {
+    int data[];
+}
+binMembership;
+
+layout(set = 0, binding = 4, std430) restrict readonly buffer FlatBinnedIndices {
+    int data[];
+}
+flatBinnedIndices;
+
+layout(set = 0, binding = 5, std430) restrict readonly buffer ParamsBuffer
 {
     Params params;
 }
 params_buffer;
 
-layout(set = 0, binding = 3, std430) readonly buffer AttrationMatrix
+layout(set = 0, binding = 6, std430) restrict readonly buffer AttrationMatrix
 {
     float data[];
 }
@@ -65,43 +93,69 @@ float attract(uint x, uint y) {
     return attrationMatrix_buffer.data[row + y];
 }
 
-vec2 sense(Organism organism, vec2 pos) {
-    uint id = gl_GlobalInvocationID.x;
-
+vec2 senseSingle(int i, Organism organism, vec2 pos) {
     int width = params_buffer.params.width;
     int height = params_buffer.params.height;
     int sensorSize = params_buffer.params.sensorSize;
-    uint numOrganisms = params_buffer.params.numOrganisms;
+    
+    Position targetPosition = positions.data[i];
+    vec2 targetPos = vec2(targetPosition.x, targetPosition.y);
+
+    float distX = targetPos.x - pos.x;
+    float wrappedDistX = distX - sign(distX) * width;
+    float distY = targetPos.y - pos.y;
+    float wrappedDistY = distY - sign(distY) * height;
+
+    // If it wraps, force sign is flipped
+    // If it doesn't, it's not.
+    float effectiveDistX = abs(distX) < abs(wrappedDistX) ? distX : wrappedDistX;
+    float effectiveDistY = abs(distY) < abs(wrappedDistY) ? distY : wrappedDistY;
+
+    vec2 dist = vec2(effectiveDistX, effectiveDistY);
+    float r = sqrt(float(dist.x * dist.x + dist.y * dist.y));
+
+    // Continue to next iteration if the sample is outside of the circle.
+    if (r <= 0.0 || r >= float(sensorSize)) return vec2(0);
+
+    vec2 normalizedDist = dist / r;
+    return normalizedDist * force(
+        r / float(sensorSize),
+        attract(organism.type, organisms.data[i].type)
+    );
+}
+
+vec2 senseBin(int binIndex, Organism organism, vec2 pos) {
+    uint id = gl_GlobalInvocationID.x;
+    Bin bin = bins.data[binIndex];
 
     vec2 totalForce = vec2(0.0);
-
-    for (int i = 0; i < numOrganisms; i++) {
-        if (i == id) continue;
-        Position targetPosition = positions.data[i];
-        vec2 targetPos = vec2(targetPosition.x, targetPosition.y);
-
-        float distX = targetPos.x - pos.x;
-        float wrappedDistX = distX - sign(distX) * width;
-        float distY = targetPos.y - pos.y;
-        float wrappedDistY = distY - sign(distY) * height;
-
-        // If it wraps, force sign is flipped
-        // If it doesn't, it's not.
-        float effectiveDistX = abs(distX) < abs(wrappedDistX) ? distX : wrappedDistX;
-        float effectiveDistY = abs(distY) < abs(wrappedDistY) ? distY : wrappedDistY;
-
-        vec2 dist = vec2(effectiveDistX, effectiveDistY);
-        float r = sqrt(float(dist.x * dist.x + dist.y * dist.y));
-
-        // Continue to next iteration if the sample is outside of the circle.
-        if (r <= 0.0 || r >= float(sensorSize)) continue;
-
-        vec2 normalizedDist = dist / r;
-        totalForce += normalizedDist * force(
-            r / float(sensorSize),
-            attract(organism.type, organisms.data[i].type)
-        );
+    for (int i = bin.start; i < bin.end; i++) {
+        int index = flatBinnedIndices.data[i];
+        if (index == id) continue;
+        totalForce += senseSingle(index, organism, pos);
     }
+    return totalForce;
+}
+
+vec2 sense(Organism organism, vec2 pos) {
+    uint id = gl_GlobalInvocationID.x;
+    uint numOrganisms = params_buffer.params.numOrganisms;
+    int sensorSize = params_buffer.params.sensorSize;
+    
+    int binIndex = binMembership.data[id];
+    Bin bin = bins.data[binIndex];
+
+    vec2 totalForce = vec2(0.0);
+    
+    totalForce += senseBin(binIndex, organism, pos);
+    totalForce += senseBin(bin.left, organism, pos);
+    totalForce += senseBin(bin.upLeft, organism, pos);
+    totalForce += senseBin(bin.up, organism, pos);
+    totalForce += senseBin(bin.upRight, organism, pos);
+    totalForce += senseBin(bin.right, organism, pos);
+    totalForce += senseBin(bin.downRight, organism, pos);
+    totalForce += senseBin(bin.down, organism, pos);
+    totalForce += senseBin(bin.downLeft, organism, pos);
 
     return totalForce * sensorSize * 5.0;
 }
